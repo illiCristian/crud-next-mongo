@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { useRouter } from "next/router";
+import React, { useEffect, useState } from "react";
 import {
   Button,
   Form,
@@ -10,6 +11,7 @@ import {
 } from "semantic-ui-react";
 
 export default function New() {
+  const { push, query } = useRouter();
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
@@ -30,7 +32,13 @@ export default function New() {
     //Al momento de validar si no hay un titulo o una descripcion vamos a setear esos errores en el state
     let errors = validate();
     if (Object.keys(errors).length) return setErrors(errors);
-    await saveTask();
+    if (query.id) {
+      console.log("actualizando");
+      await updateTask();
+    } else {
+      await saveTask();
+    }
+    push("/");
   };
   const handleChange = async (e) => {
     setNewTask({
@@ -39,7 +47,17 @@ export default function New() {
     });
     console.log(newTask);
   };
-
+  const getTask = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/task/${query.id}`
+      );
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
   const saveTask = async () => {
     try {
       const response = await fetch("http://localhost:3000/api/task/", {
@@ -55,6 +73,28 @@ export default function New() {
       console.log(error);
     }
   };
+  const updateTask = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/task/${query.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(newTask),
+        }
+      );
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  //con useEffect vamos
+  useEffect(() => {
+    if (query.id) getTask();
+  }, []);
   return (
     <Grid
       centered
@@ -64,7 +104,7 @@ export default function New() {
     >
       <GridRow>
         <GridColumn textAlign="center">
-          <h1> Create Task</h1>
+          <h1> {query.id ? "Edit Task" : "Create New Task"}</h1>
           <Form onSubmit={handleSubmit}>
             <FormInput
               label="Title"
@@ -72,6 +112,7 @@ export default function New() {
               name="title"
               onChange={handleChange}
               error={errors.title ? { content: errors.title } : null}
+              value={newTask.title}
             />
             <FormTextArea
               label="Description"
@@ -81,6 +122,7 @@ export default function New() {
               error={
                 errors.description ? { content: errors.description } : null
               }
+              value={newTask.description}
             />
             <Button primary>Save</Button>
           </Form>

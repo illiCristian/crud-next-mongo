@@ -1,3 +1,4 @@
+import { useRouter } from "next/router";
 import {
   Button,
   Card,
@@ -8,9 +9,9 @@ import {
 
 export default function Home({ data }) {
   //Destructuramos los datos que vienen de props { data } y los podemos usar en el front
-
+  const router = useRouter();
   return (
-    <Container>
+    <Container style={{ padding: "20px" }}>
       <Card.Group itemsPerRow={4}>
         {data.map((task) => (
           <Card key={task._id}>
@@ -19,8 +20,15 @@ export default function Home({ data }) {
               <p>{task.description}</p>
             </CardContent>
             <CardContent extra>
-              <Button primary>View</Button>
-              <Button primary>Edit</Button>
+              <Button primary onClick={() => router.push(`/task/${task._id}`)}>
+                View
+              </Button>
+              <Button
+                primary
+                onClick={() => router.push(`/task/${task._id}/edit`)}
+              >
+                Edit
+              </Button>
             </CardContent>
           </Card>
         ))}
